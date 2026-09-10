@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kagent vs Azure SRE Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --bg-card: rgba(22, 28, 45, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-primary: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-violet: #8b5cf6;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --font-display: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'Fira Code', monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      padding: 24px 16px 64px;
+    }
+    .wrap { max-width: 1000px; margin: 0 auto; }
+    a { color: var(--accent-cyan); }
+    h1 { font-family: var(--font-display); font-size: clamp(1.5rem, 4vw, 2.1rem); margin: 0 0 4px; }
+    .subtitle { color: var(--text-muted); margin: 0 0 24px; font-size: 0.95rem; }
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 0.85rem; text-decoration: none; }
+
+    .cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 640px) { .cols { grid-template-columns: 1fr; } }
+    .side {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px;
+    }
+    .side h2 { margin: 0 0 4px; font-family: var(--font-display); font-size: 1.15rem; }
+    .side .tag { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 14px; }
+    .side.kagent { border-top: 3px solid var(--accent-green); }
+    .side.azure { border-top: 3px solid var(--accent-cyan); }
+    .side ul { margin: 0; padding-left: 18px; font-size: 0.86rem; line-height: 1.6; color: var(--text-primary); }
+    .side .price {
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      color: var(--accent-green);
+      margin: 6px 0 2px;
+    }
+    .side.azure .price { color: var(--accent-cyan); }
+    .price-note { color: var(--text-muted); font-size: 0.75rem; }
+
+    h2.section { font-family: var(--font-display); font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin: 32px 0 16px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+    th { color: var(--text-muted); font-weight: 500; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    td.mono { font-family: var(--font-mono); font-size: 0.8rem; }
+    .win { color: var(--accent-green); }
+    .neutral { color: var(--accent-amber); }
+
+    .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+    .card h3 { margin: 0 0 8px; font-family: var(--font-display); font-size: 1rem; }
+    .card p { margin: 4px 0; color: var(--text-muted); font-size: 0.87rem; line-height: 1.55; }
+    .card code { font-family: var(--font-mono); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; color: var(--accent-cyan); }
+    .cite { font-size: 0.72rem; color: var(--text-muted); }
+    footer { margin-top: 40px; color: var(--text-muted); font-size: 0.78rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back-link" href="agent_status.html"><i class="fa-solid fa-arrow-left"></i>&nbsp; Back to Agent Status</a>
+    <h1>kagent vs Azure SRE Agent</h1>
+    <p class="subtitle">Cost and capability, for the purposes of this project's PoC (Kubernetes-native agent, minikube, DeepSeek backend).</p>
+
+    <div class="cols">
+      <div class="side kagent">
+        <h2>kagent</h2>
+        <div class="tag">Open source · self-hosted · Apache 2.0</div>
+        <div class="price">$0 / month license</div>
+        <div class="price-note">+ your compute + your LLM API bill</div>
+        <ul>
+          <li>Runs on any Kubernetes cluster you already have (minikube, EKS, AKS, GKE, bare metal)</li>
+          <li>You pick the model provider — OpenAI, Anthropic, Gemini, Bedrock, Ollama, or any OpenAI-compatible endpoint (e.g. DeepSeek)</li>
+          <li>Agents, tools, and model config are Kubernetes CRDs — GitOps-friendly, `kubectl`-native</li>
+          <li>124 built-in MCP tools: kubectl, Helm, Istio, Argo Rollouts, Prometheus, Grafana, Cilium</li>
+          <li>No vendor lock-in to a cloud; scope is whatever your cluster can reach</li>
+        </ul>
+      </div>
+      <div class="side azure">
+        <h2>Azure SRE Agent</h2>
+        <div class="tag">Managed SaaS · Microsoft Azure</div>
+        <div class="price">~$288–292 / agent / month</div>
+        <div class="price-note">baseline always-on only, before any actual work (see below)</div>
+        <ul>
+          <li>Fully managed — no cluster or infrastructure to run yourself</li>
+          <li>Deep native integration with Azure Monitor, runbooks, incident tooling</li>
+          <li>Model choice limited to Azure-hosted providers (Anthropic, OpenAI, others per docs)</li>
+          <li>MCP server connectivity for ecosystem integration</li>
+          <li>Scope is Azure-hosted applications and infrastructure</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2 class="section">Cost Breakdown</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Cost Component</th><th>kagent</th><th>Azure SRE Agent</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Software license</td>
+            <td class="win">$0 (Apache 2.0)</td>
+            <td>Included in usage billing</td>
+          </tr>
+          <tr>
+            <td>Always-on / baseline</td>
+            <td class="win">$0 — pods just idle at normal K8s resource cost</td>
+            <td class="mono">4 AAU/agent-hour</td>
+          </tr>
+          <tr>
+            <td>Baseline, illustrative $ (1 agent, 1 month)</td>
+            <td class="win">$0 baseline (compute only)</td>
+            <td class="mono">4 × 24 × 30 × $0.10/AAU ≈ <strong>$288/mo</strong></td>
+          </tr>
+          <tr>
+            <td>Active work (per task)</td>
+            <td>Your LLM provider's per-token rate directly (e.g. DeepSeek: ~$0.28/M output tokens as of this project's setup)</td>
+            <td class="mono">0.25 AAU/sec while processing + token-based AAUs (e.g. Claude Opus 4.6: 100/500 AAU per 1M input/output tokens ≈ $10–$50/M tokens at $0.10/AAU)</td>
+          </tr>
+          <tr>
+            <td>Compute / hosting</td>
+            <td>Your existing cluster (minikube: free; managed K8s: your normal cluster bill)</td>
+            <td class="win">Included — no cluster to manage</td>
+          </tr>
+          <tr>
+            <td>10 sample agents running idle</td>
+            <td class="win">$0 extra — same pods, shared cluster</td>
+            <td class="mono">10 × ~$288/mo ≈ <strong>$2,880/mo</strong> baseline alone</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cite">
+      AAU = Azure Agent Unit. $0.10/AAU is Microsoft's own illustrative example rate (regional/contract pricing varies and isn't published).
+      Sources: <a href="https://azure.microsoft.com/en-us/products/sre-agent" target="_blank">Azure SRE Agent overview</a>,
+      <a href="https://learn.microsoft.com/en-us/azure/sre-agent/pricing-billing" target="_blank">Pricing &amp; billing docs</a> (accessed 2026-09-10).
+    </p>
+
+    <h2 class="section">Capability Comparison</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Capability</th><th>kagent</th><th>Azure SRE Agent</th></tr></thead>
+        <tbody>
+          <tr><td>Deployment target</td><td>Any Kubernetes cluster</td><td>Azure-hosted applications/infra only</td></tr>
+          <tr><td>Model provider choice</td><td class="win">Any — OpenAI, Anthropic, Gemini, Bedrock, Ollama, custom OpenAI-compatible (this project uses DeepSeek)</td><td>Azure-curated set (Anthropic, OpenAI, others)</td></tr>
+          <tr><td>Root cause analysis / investigation</td><td>Via agent + tool calls you configure (kubectl, Prometheus, Grafana, etc.)</td><td class="win">Purpose-built: accelerated RCA across app/platform/infra</td></tr>
+          <tr><td>Automated mitigation</td><td>Whatever your agent's tools/manifests allow (declarative, you write it)</td><td class="win">Built-in guardrailed auto-mitigation with approval flows</td></tr>
+          <tr><td>Incident tooling integration</td><td>Manual / build your own via MCP tools</td><td class="win">Native: Azure Monitor, runbooks, incident response plans</td></tr>
+          <tr><td>GitHub Copilot integration</td><td>Not built-in</td><td class="win">Native, for code-based fixes</td></tr>
+          <tr><td>Extensibility (custom tools)</td><td class="win">MCP servers, Kubernetes CRDs, fully open — build anything</td><td>MCP server connectivity, but within Azure's agent model</td></tr>
+          <tr><td>Data residency / control</td><td class="win">Fully yours — runs where your cluster runs</td><td>Azure-managed, Azure's data handling</td></tr>
+          <tr><td>Setup complexity</td><td>Moderate — Helm install, ModelConfig, namespace/webhook conflicts possible (as hit in this project)</td><td class="win">Low — SaaS onboarding, no cluster ops</td></tr>
+          <tr><td>Cost predictability</td><td class="win">Predictable — you already pay for the cluster; LLM cost scales with actual usage only</td><td>AAU-based; a spending-limit safety net exists, but baseline always-on billing runs regardless of use</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="section">Bottom Line for This Project</h2>
+    <div class="card">
+      <h3>Why kagent fit the PoC objective</h3>
+      <p>The OKR was explicit: <em>"public open-source libraries only,"</em> local <em>"minikube"</em> environment, $0 licensing.
+      Azure SRE Agent's baseline alone (~$288/agent/month, before any actual investigation work) would cost more per month
+      than this entire PoC's DeepSeek API usage is likely to reach in a year of light use — and it only targets Azure-hosted
+      workloads, which this project (a local minikube cluster) is not.</p>
+      <p>kagent's trade-off is real, though: you own the setup (as this project's own thinking log documents — a pre-existing
+      Zarf webhook and a Helm CLI quoting bug both had to be debugged by hand). Azure SRE Agent buys away that operational
+      burden at a fixed, metered price, with deeper out-of-the-box incident tooling if your workloads already live in Azure.</p>
+    </div>
+
+    <footer>
+      Data current as of 2026-09-10 · Prices are illustrative — see cited sources for live/regional rates ·
+      <a href="agent_status.html">← Back to Agent Status</a> ·
+      <a href="markdown_renderer.html?file=2_Environment/deepseek.md">DeepSeek integration notes</a>
+    </footer>
+  </div>
+</body>
+</html>

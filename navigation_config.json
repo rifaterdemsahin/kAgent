@@ -2,7 +2,9 @@
   "projectMenu": [
     {"label": "Home", "url": "index.html"},
     {"label": "Docs", "url": "5_Symbols/markdown_renderer.html?file=2_Environment/README.md"},
-    {"label": "API", "url": "5_Symbols/markdown_renderer.html?file=4_Formula/README.md"}
+    {"label": "API", "url": "5_Symbols/markdown_renderer.html?file=4_Formula/README.md"},
+    {"label": "Agent Status", "url": "5_Symbols/agent_status.html"},
+    {"label": "kagent vs Azure SRE", "url": "5_Symbols/comparison_kagent_vs_azure_sre.html"}
   ],
   "debugMenu": [
     {"label": "1. Real Unknown", "url": "1_Real_Unknown/README.md"},

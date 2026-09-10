@@ -197,6 +197,30 @@
 - **Related Files:** `.claude/skills/mcp-builder/`, `.claude/skills/webapp-testing/`, `.kilo/skills/mcp-builder.md`, `.kilo/skills/webapp-testing.md`, `2_Environment/superskills.md`, `.kilo/kilo.json`
 - **Last Updated:** 2026-09-10
 
+### SPEC-016: kagent Installed on minikube, Wired to DeepSeek, Sample Agents Deployed
+- **Status:** Active — **KR 2.2 blocked on DeepSeek account balance (R-010)**
+- **Description:** kagent (Helm chart `0.10.1`, `demo` profile) is installed in the `kagent` namespace of the existing local minikube cluster. `ModelConfig/default-model-config` targets DeepSeek via kagent's `OpenAI` provider type with `openAI.baseUrl` overridden. 10 sample `Agent` CRs are deployed and `Ready`/`Accepted`/`Running`.
+- **Key Behaviors:**
+  - Reused the pre-existing `minikube` profile rather than creating a second cluster.
+  - Installed via `kagent install --profile demo`; the DeepSeek key was pulled from Azure Key Vault (`az keyvault secret show --vault-name dp-kv-deliverypilot --name deepseek-api-key`) directly into an env var — never printed or written to a committed file.
+  - **Cluster conflict fixed:** this minikube cluster already carried a Zarf mutating webhook (from unrelated prior `zarf`/`hello-world` work) that rewrites image pulls in every namespace except `kube-system`. It broke every kagent pod with `ImagePullBackOff`. Fixed by patching the `agent-pod.zarf.dev` webhook's `namespaceSelector` to also exclude the `kagent` namespace (`kubectl patch mutatingwebhookconfigurations zarf --type=json ...`) — a minimal, reversible, namespace-scoped exclusion; `zarf`/`hello-world` namespaces are untouched.
+  - **Helm values bug fixed:** the kagent CLI's `KAGENT_HELM_EXTRA_ARGS` env var does a naive `strings.Split` on the literal `"--set"`, so surrounding whitespace leaks into the split values. This corrupted the first install (stray `' providers'` top-level key, trailing space in the model name). Fixed with a direct `helm upgrade` using a clean values file instead of relying on that CLI env var for multi-value overrides.
+  - **Verified end-to-end**, not just pod readiness: port-forwarded the controller and sent a real `message/send` JSON-RPC call. Confirmed the full path works (kagent → ModelConfig → DeepSeek's `/chat/completions`) — DeepSeek returned `402 Payment Required — Insufficient Balance`, a billing/funding issue on the DeepSeek account, not a configuration defect.
+  - The `kagent` CLI's own `invoke` subcommand has a client-side bug parsing this error shape (`json: cannot unmarshal object into Go struct field ClientResponse.error.data`) in v0.10.1 — worked around by calling the controller's JSON-RPC endpoint directly.
+- **Related Files:** `2_Environment/architecture.md` (kagent-on-minikube Architecture section), `2_Environment/deepseek.md`, `1_Real_Unknown/risks.md` (R-010), `1_Real_Unknown/tasks.md`, `4_Formula/llm_thinking_log.md`
+- **Last Updated:** 2026-09-10
+
+### SPEC-017: Agent Status Page + kagent vs Azure SRE Agent Comparison Page
+- **Status:** Active
+- **Description:** Two static HTML pages published under `5_Symbols/`, linked from the Project Menu (always-visible nav) so a visitor sees, without digging through markdown, which agents are deployed and how kagent compares to Azure SRE Agent on cost/capability.
+- **Key Behaviors:**
+  - `5_Symbols/agent_status.html` is a **static snapshot** (explicitly labeled as such — GitHub Pages cannot reach a local minikube cluster) of the 2026-09-10 install: platform pod table, all 10 sample-agent CRs and their Ready/Accepted/Running state, and the live-invoke test result (reaches DeepSeek, blocked by R-010).
+  - `5_Symbols/comparison_kagent_vs_azure_sre.html` compares cost (kagent: $0 license + your compute/LLM bill vs Azure SRE Agent: ~4 AAU/agent-hour baseline, illustrative ~$288–292/agent/month before any work, per Microsoft's own published example rate) and capability, cited to Microsoft's own SRE Agent product and pricing docs (accessed 2026-09-10).
+  - Both pages registered in the Project Menu in all three nav sources (`navigation_config.json`, `index.html` fallback, `5_Symbols/markdown_renderer.html` fallback) to keep `smoke_test.py`'s Menu Links Resolve / Nav sync checks green.
+  - Internal links to project markdown docs go through `markdown_renderer.html?file=...` (rendered), not raw `.md` files.
+- **Related Files:** `5_Symbols/agent_status.html`, `5_Symbols/comparison_kagent_vs_azure_sre.html`, `navigation_config.json`, `index.html`, `5_Symbols/markdown_renderer.html`
+- **Last Updated:** 2026-09-10
+
 ---
 
 ## Spec Template

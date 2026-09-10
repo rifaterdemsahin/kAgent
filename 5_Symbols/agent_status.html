@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kAgent — Agent Status</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --bg-card: rgba(22, 28, 45, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-primary: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-violet: #8b5cf6;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --font-display: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'Fira Code', monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      padding: 24px 16px 64px;
+    }
+    .wrap { max-width: 1000px; margin: 0 auto; }
+    a { color: var(--accent-cyan); }
+    h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      margin: 0 0 4px;
+    }
+    .subtitle { color: var(--text-muted); margin: 0 0 24px; font-size: 0.95rem; }
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 0.85rem; text-decoration: none; }
+    .snapshot-banner {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #fcd34d;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 28px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat .num { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 600; }
+    .stat .lbl { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 4px; }
+    .stat.green .num { color: var(--accent-green); }
+    .stat.red .num { color: var(--accent-red); }
+    .stat.cyan .num { color: var(--accent-cyan); }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      margin: 32px 0 16px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border-color); }
+    th { color: var(--text-muted); font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    td.mono, th.mono { font-family: var(--font-mono); }
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 600;
+    }
+    .badge.ready { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+    .badge.blocked { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+    .table-wrap { overflow-x: auto; }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .card h3 { margin: 0 0 8px; font-family: var(--font-display); font-size: 1rem; }
+    .card p { margin: 4px 0; color: var(--text-muted); font-size: 0.88rem; line-height: 1.5; }
+    .card code { font-family: var(--font-mono); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.82rem; color: var(--accent-cyan); }
+    .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 0.8rem; margin: 12px 0; }
+    .flow .node { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; }
+    .flow .arrow { color: var(--text-muted); }
+    .flow .node.fail { border-color: var(--accent-red); color: #fca5a5; }
+    footer { margin-top: 40px; color: var(--text-muted); font-size: 0.78rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back-link" href="../index.html"><i class="fa-solid fa-arrow-left"></i>&nbsp; Back to kAgent</a>
+    <h1>Agent Status — kagent on minikube</h1>
+    <p class="subtitle">Which agent got deployed, where it's running, and what happened when it was invoked.</p>
+
+    <div class="snapshot-banner">
+      <i class="fa-solid fa-camera"></i>&nbsp;
+      <strong>Static snapshot</strong> captured 2026-09-10, 14:06 UTC. This page does not poll the live cluster —
+      GitHub Pages can't reach a local minikube instance. Re-run <code>kubectl get agents,pods -n kagent</code>
+      and update this page to refresh.
+    </div>
+
+    <div class="grid">
+      <div class="stat green"><div class="num">10/10</div><div class="lbl">Agents Ready</div></div>
+      <div class="stat green"><div class="num">6/6</div><div class="lbl">Platform Pods Running</div></div>
+      <div class="stat cyan"><div class="num">deepseek-chat</div><div class="lbl">Model Backend</div></div>
+      <div class="stat red"><div class="num">402</div><div class="lbl">Blocked: DeepSeek Balance</div></div>
+    </div>
+
+    <h2>Platform Components (namespace: <span style="font-family:var(--font-mono)">kagent</span>)</h2>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Component</th><th>Role</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">kagent-controller</td><td>Reconciles Agent / ModelConfig CRDs, JSON-RPC (A2A) API on :8083</td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">kagent-ui</td><td>Web dashboard (<code>kagent dashboard</code>, port-forward :8082)</td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">kagent-tools</td><td>MCP server — 124 tools (kubectl, helm, istio, argo, prometheus, grafana, cilium…)</td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">kagent-grafana-mcp</td><td>Grafana-specific MCP tool server</td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">kagent-kmcp-controller-manager</td><td>MCP server lifecycle controller</td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">kagent-postgresql</td><td>Bundled DB (dev/eval only, not production)</td><td><span class="badge ready">Running</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h2>Sample Agents Deployed (demo profile)</h2>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Agent</th><th>Type</th><th>Ready</th><th>Accepted</th><th>Pod</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">k8s-agent</td><td>Declarative</td><td><span class="badge ready">True</span></td><td><span class="badge ready">True</span></td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">helm-agent</td><td>Declarative</td><td><span class="badge ready">True</span></td><td><span class="badge ready">True</span></td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">istio-agent</td><td>Declarative</td><td><span class="badge ready">True</span></td><td><span class="badge ready">True</span></td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">kgateway-agent</td><td>Declarative</td><td><span class="badge ready">True</span></td><td><span class="badge ready">True</span></td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">cilium-manager-agent</td><td>Declarative</td><td><span class="badge ready">True</span></td><td><span class="badge ready">True</span></td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">cilium-policy-agent</td><td>Declarative</td><td><span class="badge ready">True</span></td><td><span class="badge ready">True</span></td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">cilium-debug-agent</td><td>Declarative</td><td><span class="badge ready">True</span></td><td><span class="badge ready">True</span></td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">observability-agent</td><td>Declarative</td><td><span class="badge ready">True</span></td><td><span class="badge ready">True</span></td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">promql-agent</td><td>Declarative</td><td><span class="badge ready">True</span></td><td><span class="badge ready">True</span></td><td><span class="badge ready">Running</span></td></tr>
+        <tr><td class="mono">argo-rollouts-conversion-agent</td><td>Declarative</td><td><span class="badge ready">True</span></td><td><span class="badge ready">True</span></td><td><span class="badge ready">Running</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h2>What happens when you invoke k8s-agent</h2>
+    <div class="card">
+      <p>Live test performed 2026-09-10: sent a real <code>message/send</code> JSON-RPC call to the controller asking
+      <em>"What is a Kubernetes Pod, in one sentence?"</em>. The full pipeline executed correctly end-to-end —
+      it's the last hop (DeepSeek's own account balance) that's blocked, not the setup.</p>
+      <div class="flow">
+        <div class="node">kubectl port-forward :8083</div>
+        <div class="arrow">→</div>
+        <div class="node">kagent-controller (A2A JSON-RPC)</div>
+        <div class="arrow">→</div>
+        <div class="node">k8s-agent pod (ADK engine)</div>
+        <div class="arrow">→</div>
+        <div class="node fail">api.deepseek.com/chat/completions<br>402 Insufficient Balance</div>
+      </div>
+      <p><strong>Fix required:</strong> top up the DeepSeek account behind the key stored at
+      <code>/vaults/dp-kv-deliverypilot/secrets → deepseek-api-key</code>. See
+      <a href="markdown_renderer.html?file=1_Real_Unknown/risks.md">R-010 in risks.md</a> and
+      <a href="markdown_renderer.html?file=2_Environment/deepseek.md">deepseek.md</a>.</p>
+    </div>
+
+    <h2>Model Configuration</h2>
+    <div class="card">
+      <h3>ModelConfig / default-model-config</h3>
+      <p><code>provider: OpenAI</code> &nbsp; <code>model: deepseek-chat</code> &nbsp; <code>openAI.baseUrl: https://api.deepseek.com</code></p>
+      <p>API key loaded from Azure Key Vault (<code>dp-kv-deliverypilot</code>) into a Kubernetes Secret at install time — never written to a manifest or committed to git.</p>
+    </div>
+
+    <footer>
+      Built on <a href="https://kagent.dev">kagent</a> (Apache 2.0) · Full setup narrative in
+      <a href="markdown_renderer.html?file=4_Formula/llm_thinking_log.md">llm_thinking_log.md</a> ·
+      Cost/capability comparison: <a href="comparison_kagent_vs_azure_sre.html">kagent vs Azure SRE Agent</a>
+    </footer>
+  </div>
+</body>
+</html>

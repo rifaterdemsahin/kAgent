@@ -78,6 +78,53 @@ graph TD
 
 ---
 
+## 🤖 kagent-on-minikube Architecture (Project Objective)
+
+> This is this project's **actual runtime architecture** — separate from the website infra above. It targets the OKRs in [`1_Real_Unknown/okrs.md`](../1_Real_Unknown/okrs.md): set up kagent, run sample agents in Kubernetes, on minikube.
+
+```mermaid
+graph TD
+    Dev["👤 Developer (kagent CLI / kubectl)"]
+    Minikube["☸️ minikube (local Kubernetes)"]
+    Zarf["⚠️ Zarf mutating webhook (pre-existing, unrelated PoC)"]
+    Controller["kagent-controller (reconciles Agent/ModelConfig CRDs)"]
+    UI["kagent-ui (web dashboard, kubectl port-forward)"]
+    Tools["kagent-tools (MCP server: kubectl/helm/istio/etc.)"]
+    Postgres["kagent-postgresql (bundled, dev-only)"]
+    Agents["10 sample Agent pods<br/>(k8s-agent, helm-agent, istio-agent, cilium-*, kgateway-agent, observability-agent, promql-agent, argo-rollouts-conversion-agent)"]
+    ModelConfig["ModelConfig CR<br/>provider: OpenAI, model: deepseek-chat<br/>baseUrl: api.deepseek.com"]
+    Secret["K8s Secret kagent-openai<br/>(DEEPSEEK key)"]
+    KeyVault["🔒 Azure Key Vault<br/>/vaults/dp-kv-deliverypilot/secrets<br/>deepseek-api-key"]
+    DeepSeek["🌐 DeepSeek API<br/>(OpenAI-compatible)"]
+
+    Dev -->|kagent install / invoke| Minikube
+    Minikube --> Zarf
+    Zarf -.->|excluded for ns=kagent, still active for ns=zarf/hello-world| Minikube
+    Minikube --> Controller
+    Minikube --> UI
+    Minikube --> Tools
+    Minikube --> Postgres
+    Controller -->|reconciles| Agents
+    Controller -->|reconciles| ModelConfig
+    ModelConfig --> Secret
+    KeyVault -->|az keyvault secret show, loaded at install time| Secret
+    Agents -->|chat completions| DeepSeek
+    Agents -->|MCP tool calls| Tools
+
+    style Zarf fill:#f59e0b,color:#000
+    style DeepSeek fill:#06b6d4,color:#fff
+    style KeyVault fill:#1e293b,color:#fff
+```
+
+**Key facts (as delivered, 2026-09-10):**
+- **Cluster:** reused the existing `minikube` profile (Docker driver) already running on this machine — did not create a second cluster.
+- **Install:** `kagent install --profile demo` (kagent CLI + Helm chart `0.10.1`), deployed to the `kagent` namespace.
+- **Model backend:** DeepSeek via kagent's `OpenAI` provider type with `openAI.baseUrl` overridden to `https://api.deepseek.com` (see [`deepseek.md`](deepseek.md)). Key loaded from Azure Key Vault into a Helm-managed `Secret` (`kagent-openai`) — never written to a manifest or committed.
+- **Blocker found in this cluster:** a **Zarf** mutating admission webhook from earlier, unrelated experimentation (`zarf`/`hello-world` namespaces) intercepts image pulls in every namespace except `kube-system` by default. It broke every kagent pod (`ImagePullBackOff`) until the `kagent` namespace was added to that webhook's exclusion list (`kubectl patch mutatingwebhookconfigurations zarf ...`) — a minimal, reversible edit that leaves Zarf's behavior for `zarf`/`hello-world` untouched.
+- **Result:** all 10 demo-profile sample agents (`k8s-agent`, `helm-agent`, `istio-agent`, `cilium-debug-agent`, `cilium-manager-agent`, `cilium-policy-agent`, `kgateway-agent`, `observability-agent`, `promql-agent`, `argo-rollouts-conversion-agent`) are `Ready`/`Accepted`/`Running`. A live `message/send` call was confirmed reaching DeepSeek's API — see [R-010 in `risks.md`](../1_Real_Unknown/risks.md) for the one remaining blocker (DeepSeek account balance).
+
+---
+
 ## 🛠️ How to Keep This Document Updated
 
 1. **Keep Diagrams in Sync:** If new components are added (e.g. database layers, external OAuth providers), update the Mermaid graph above.
