@@ -97,3 +97,39 @@
 
 ### Takeaway for Future AI Agents
 - Load `5_Symbols/rules/agent_operating_rules.md` at session start. After work: write the spec in `4_Formula/specs.md`, then commit and push.
+
+## 📅 2026-09-10: kagent on minikube — from ImagePullBackOff to a real DeepSeek answer
+
+### What went well
+- Reading the actual CRD Go source (`api/v1alpha3/modelconfig_types.go`) and the Helm template before guessing paid off immediately — `provider: OpenAI` + `openAI.baseUrl` was exactly right for pointing kagent at DeepSeek's OpenAI-compatible API, first try.
+- Verified with a real end-to-end call instead of trusting `kubectl wait --for=condition=Ready`. That distinction mattered twice: it caught the corrupted Helm values (trailing space in the model name) that pod-readiness alone would never surface, and later it's what proved KR 2.2 was actually met (a real DeepSeek-generated answer), not just "pods are green."
+- When credits were added, the fix loop closed cleanly: same key pulled fresh from Key Vault, same two agents (`k8s-agent`, `helm-agent`) re-invoked, both returned correct, on-topic answers with `state: completed`.
+
+### Gaps & Challenges
+- **Shared-cluster surprise:** this minikube cluster already carried a Zarf mutating webhook from unrelated prior work (`zarf`/`hello-world` PoC). It silently rewrote every new pod's image reference cluster-wide (any namespace but `kube-system`), which is a much wider blast radius than its own `zarf` namespace would suggest. Lesson: before installing anything new into a cluster you didn't just create, check `kubectl get mutatingwebhookconfigurations` / `validatingwebhookconfigurations` — cluster-wide admission webhooks from past experiments are invisible until something breaks.
+- **CLI helper env vars can silently corrupt values:** `KAGENT_HELM_EXTRA_ARGS`'s naive string-split on `"--set"` ate whitespace into the actual Helm values. Lesson: when a CLI wrapper's "extra args passthrough" mechanism is string-based rather than a real arg array, don't trust it for anything beyond a single trivial value — go straight to `helm upgrade` with an explicit values file instead.
+- **A diagnostic command leaked a secret to output:** `helm get values <release>` prints `apiKey` in plaintext by default. Caught it, didn't re-print or persist it, rebuilt the fix from the source env var instead of the dumped file. Lesson: treat `helm get values` on any release with API keys as sensitive output — redact (`sed`) before ever displaying or logging it.
+- **The blocker that wasn't fixable by config:** DeepSeek's `402 Insufficient Balance` looked identical in shape to a config error until the raw JSON-RPC response was inspected directly (the `kagent invoke` CLI itself has a bug parsing this exact error shape in v0.10.1). Lesson: when a CLI's own error handling looks suspicious, drop to `curl` against the underlying API and read the raw response before assuming the setup is wrong.
+
+### Takeaway for Future AI Agents
+- On a cluster you didn't just create, check for pre-existing mutating/validating webhooks before installing anything new.
+- Don't rely on a CLI's ad-hoc "extra helm args" string env var for structured multi-value overrides — build the values file yourself.
+- Never let a secret-bearing command's output (like `helm get values`) get echoed back into a transcript, log, or file without redacting it first.
+- "Pods are Ready" is not "the objective is met" — send one real request through the whole path before declaring a key result done.
+
+## 📅 2026-09-10: kagent on Fly.io — k3s-in-a-Machine, two build-time surprises, one runtime surprise
+
+### What went well
+- Asking one clarifying question before building — "kagent needs real Kubernetes, Fly.io isn't Kubernetes, how do you want to reconcile that?" — surfaced the user's actual intent (k3s-in-a-Machine) instead of guessing and building the wrong thing. Fly Machines being full Firecracker micro-VMs (not shared-kernel containers) is exactly what makes nested containerd/k3s workable there.
+- Kept the runtime image minimal by fetching Helm in a throwaway Alpine build stage and copying only the static binary in, rather than trying to bolt a package manager onto a deliberately minimal BusyBox base.
+- For the one HTTPS call the idle-watchdog needs (the Fly Machines stop API) but the base image can't make (no TLS-capable client at all), reused the cluster's own working container runtime — a short-lived `curlimages/curl` pod via `kubectl run --rm` — instead of fighting the base image.
+
+### Gaps & Challenges
+- **BusyBox base images can be TLS-crippled in ways that only show up at the exact line that needs HTTPS.** `apk`, `python3`, and even a compiled-without-SSL `wget` all failed differently in `rancher/k3s`. Lesson: when a minimal base image's shell utilities behave oddly on `https://`, check whether the tool was compiled without TLS at all before assuming a syntax or network problem.
+- **A working build does not mean a working deployment.** The Helm/kagent install succeeded and pods went healthy, but the very first live agent call failed on DNS — because Fly Machines default to an internal-only resolver (`fdaa::3`) that CoreDNS silently inherited as its upstream. This was invisible until the exact moment an in-cluster pod tried to resolve a public hostname. Lesson: on any new hosting platform, test one real outbound HTTPS call from inside the workload early — don't wait until the feature that needs it is the first thing you test.
+- **Environment parity matters for OKRs.** The original OKR said "environment is minikube"; the user later redirected to Fly.io mid-session. Both are now real, documented, DeepSeek-verified deployments (SPEC-016 and SPEC-018) rather than one replacing the other — kept both specs rather than silently overwriting the minikube one, since the user never said to tear it down.
+
+### Takeaway for Future AI Agents
+- On any minimal/BusyBox-based container image, verify each tool (`wget`, `curl`, package managers) actually supports HTTPS before relying on it in a Dockerfile `RUN` step — don't assume "has wget" means "can fetch https://".
+- On a new hosting platform (first time deploying there), send one real outbound network call from inside the workload as an explicit smoke test — DNS/resolver quirks are platform-specific and invisible from the build log.
+- When a user changes the deployment target mid-task, keep the earlier working deployment's spec intact unless told to remove it — document both rather than treating the pivot as a silent replacement.

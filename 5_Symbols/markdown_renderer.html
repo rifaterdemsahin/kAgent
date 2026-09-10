@@ -467,6 +467,7 @@
         { label: "   ├─ Logic Tracker", url: "7_Testing_Known/logic.md" },
         { label: "   ├─ Validation Report", url: "7_Testing_Known/validation_report.md" },
         { label: "   ├─ Sanity Data Source", url: "7_Testing_Known/sanity_check_report.md" },
+        { label: "   ├─ Deployment Timeline", url: "7_Testing_Known/deployment_timeline.md" },
         { label: "---", url: "divider" },
         { label: "Artifacts Carousel", url: "5_Symbols/artifacts_carousel.html" },
         { label: "agents.md", url: "agents.md" },
@@ -599,6 +600,15 @@
         fetchPath += 'README.md';
       }
       debugLog(`Parsing query string. Target file: "${filePath}", Fetch path: "${fetchPath}"`);
+
+      // This renderer only handles markdown. If someone lands here with an
+      // .html file (wrong link, bookmark, hand-typed URL), send them to the
+      // real page directly instead of trying to markdown-render raw HTML.
+      if (/\.html?(\?.*)?$/i.test(fetchPath)) {
+        debugLog(`Fetch path "${fetchPath}" is an HTML page, not markdown — redirecting directly.`);
+        window.location.replace(`../${fetchPath}`);
+        return;
+      }
 
       document.getElementById("filePath").textContent = fetchPath;
       document.title = `📄 ${fetchPath.split('/').pop()}`;

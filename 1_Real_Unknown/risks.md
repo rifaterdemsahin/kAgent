@@ -33,15 +33,6 @@
 - **Mitigation:** Load the DeepSeek key from Azure Key Vault into a Kubernetes `Secret` at deploy time (never in plain YAML); reference it via `secretKeyRef` in the agent manifest. Document the flow in `2_Environment/setup_azure.md`. `.env.example` keeps only the placeholder variable name.
 - **Last Updated:** 2026-09-10
 
-### R-010: DeepSeek account has insufficient balance — blocks live agent responses
-- **Status:** 🔴 Active — **blocks KR 2.2**
-- **Severity:** High (blocks the key result; not a config/security issue)
-- **Likelihood:** N/A — confirmed happening now
-- **Impact:** kagent is correctly installed on minikube and wired to DeepSeek (verified: `k8s-agent` pod logs show `"Initialized OpenAI model","model":"deepseek-chat","baseUrl":"https://api.deepseek.com"`; a live `message/send` call reached DeepSeek). DeepSeek's API rejected the call with `402 Payment Required — Insufficient Balance`. The agent CR is `Ready`/`Accepted`, but it cannot produce a real response until the account has credit.
-- **Trigger:** Any `kagent invoke` or dashboard chat against a deployed agent
-- **Mitigation:** Human action required — top up the DeepSeek account balance behind the key in `/vaults/dp-kv-deliverypilot/secrets` (`deepseek-api-key`), or switch `providers.openAI` to a funded provider. Not fixable from the cluster/config side.
-- **Last Updated:** 2026-09-10
-
 ### R-003: kagent Helm chart / CRD version drift
 - **Status:** 🟢 Active
 - **Severity:** Low
@@ -55,4 +46,9 @@
 
 ## ✅ Solved Risks
 
-*None yet — this is a fresh project instance.*
+### R-S10: DeepSeek account had insufficient balance — blocked live agent responses (was R-010)
+- **Status:** ✅ Solved (2026-09-10)
+- **Severity:** Was High (blocked KR 2.2)
+- **Risk:** kagent was correctly installed on minikube and wired to DeepSeek (`k8s-agent` pod logs confirmed `"Initialized OpenAI model","model":"deepseek-chat","baseUrl":"https://api.deepseek.com"`), but a live `message/send` call returned `402 Payment Required — Insufficient Balance` from DeepSeek's API. The agent CR was `Ready`/`Accepted` but could not produce a real response.
+- **Resolution:** Human action — user added credits to the DeepSeek account. Re-tested with the same key (re-pulled from Azure Key Vault, never printed) via live `message/send` calls to two different sample agents.
+- **Verification:** `k8s-agent` answered "What is a Kubernetes Pod, in one sentence?" and `helm-agent` answered "what does helm upgrade --install do?" — both returned `state: completed` with correct, on-topic `deepseek-chat`-generated text. See `6_Semblance/fix.log` (2026-09-10, VERIFIED) and `6_Semblance/error.log`.

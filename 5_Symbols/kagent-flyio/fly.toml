@@ -1,0 +1,27 @@
+# kagent on a single-node k3s cluster, running as one Fly Machine (SPEC-018).
+# Deploy from this directory: fly deploy --config fly.toml
+app = "kagent-k3s"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  KAGENT_VERSION = "0.10.1"
+  IDLE_STOP_HOURS = "3"
+
+# kagent-ui, port-forwarded to 0.0.0.0:8080 inside the Machine by entrypoint.sh
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false   # idle-watchdog.py owns the 3h stop policy, not Fly's connection-based auto-stop
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-4x"
+  memory = "8gb"
+
+[mounts]
+  source = "kagent_k3s_data"
+  destination = "/var/lib/rancher/k3s"

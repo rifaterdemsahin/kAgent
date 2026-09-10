@@ -71,6 +71,7 @@ MENU = [
     ("   ├─ Logic Tracker", "7_Testing_Known/logic.md"),
     ("   ├─ Validation Report", "7_Testing_Known/validation_report.md"),
     ("   ├─ Sanity Data Source", "7_Testing_Known/sanity_check_report.md"),
+    ("   ├─ Deployment Timeline", "7_Testing_Known/deployment_timeline.md"),
     ("---", "divider"),
     ("Artifacts Carousel", "5_Symbols/artifacts_carousel.html"),
     ("agents.md", "agents.md"),

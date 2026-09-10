@@ -922,3 +922,27 @@ This log documents the thinking phase summaries and reasoning processes of the L
 - `ModelConfig/default-model-config` correctly targets DeepSeek (`provider: OpenAI`, `model: deepseek-chat`, `openAI.baseUrl: https://api.deepseek.com`), key sourced from Azure Key Vault into a Helm-managed Secret.
 - **KR 1 (set up kagent) is met.** **KR 2 (run sample agents) is met at the infrastructure/wiring level** — a live call reaches DeepSeek — **but blocked on producing an actual answer** by R-010 (DeepSeek account has no balance). This is a human/billing action, not something further engineering can resolve.
 - Documented the Zarf webhook conflict and its fix in `2_Environment/architecture.md` (new "kagent-on-minikube Architecture" section) so a future re-run of this project on the same machine doesn't hit the same `ImagePullBackOff` mystery.
+
+---
+
+## 📅 2026-09-10 — kagent redeployed to Fly.io (k3s-in-a-Machine) + DeepSeek re-verified
+
+### 📥 Input / Task
+- User added credits to the DeepSeek account and asked to re-test using the same key from Key Vault, and to log this case in Semblance.
+- User then redirected the deployment target: instead of the local minikube (or a Codespaces+minikube alternative floated moments earlier), run kagent on **Fly.io**, using tokens already in the Key Vault. Since kagent hard-requires a Kubernetes API and Fly.io is not Kubernetes, I asked the user how to reconcile that; they chose **k3s running inside a single Fly Machine** over the alternatives (stay on minikube, or deploy only a standalone agent container).
+- User separately required: after 3 hours of no use, the compute must stop itself.
+
+### 💭 Thinking & Reasoning Process
+1. **Re-verified DeepSeek first**, before touching infrastructure: re-pulled the key from Key Vault (never printed), port-forwarded the existing minikube deployment's controller, and sent live `message/send` calls to `k8s-agent` and `helm-agent`. Both returned correct, on-topic answers — R-010 closed, KR 2.2 met on minikube.
+2. **Fly Machines are Firecracker micro-VMs, not shared-kernel containers** — that's specifically what makes nested containerd (which k3s bundles) workable there, unlike a typical Fly container deploy. Built the image on `rancher/k3s`, which is deliberately minimal (BusyBox, no package manager, no bash, and — this took two failed builds to discover — a `wget` compiled *without* TLS support at all).
+3. Fixed the toolchain gaps without bloating the runtime image: fetched Helm in a throwaway Alpine build stage (which has real `curl`) and only copied the static binary into the final k3s-based image, rather than trying to add a package manager to it.
+4. **Second failure, only visible at runtime, not build time**: the deployed agent's calls to DeepSeek failed DNS resolution ("server misbehaving"). Traced it to Fly Machines' default `/etc/resolv.conf` pointing solely at Fly's internal 6PN resolver (`fdaa::3`), which only resolves `*.internal` Fly hostnames — k3s's CoreDNS inherits and forwards to that file by default, so every public-internet lookup (DeepSeek's API included) failed. Fixed by overwriting `/etc/resolv.conf` with public resolvers (1.1.1.1, 8.8.8.8) before `k3s server` starts, so CoreDNS's default `forward . /etc/resolv.conf` picks up real upstream resolvers.
+5. **The idle-stop requirement needed its own workaround.** The same TLS-less `wget` that broke the Helm-in-Dockerfile step would also break a runtime call to Fly's Machines REST API (which is HTTPS-only). Rather than bundle a statically-linked curl into the node image, the idle watchdog spins up a short-lived `curlimages/curl` pod via `kubectl run --rm` to make that one HTTPS call — reusing the cluster's own working container runtime instead of fighting the base image's missing TLS stack.
+6. Implemented idle detection in POSIX `sh` (no Python/jq available): rather than parse timestamps out of JSON logs with no JSON tool, the watchdog waits until the Machine has been up at least `IDLE_STOP_HOURS`, then checks whether `kubectl logs --since=${IDLE_STOP_HOURS}h` on the controller contains *any* `/api/a2a/` request; if none, it calls the Fly Machines API to stop itself. Approximate (can run up to one 5-minute poll interval past the true 3h mark) but correct in the direction that matters — it never stops instances of real usage, and it can't run forever.
+7. Verified end-to-end again on the new deployment: a live `message/send` call to `k8s-agent` on `https://kagent-k3s.fly.dev` returned a correct, DeepSeek-generated answer.
+
+### 📤 Outcomes & Decisions
+- R-010 (was: DeepSeek insufficient balance) solved — moved to Solved Risks as R-S10 in `1_Real_Unknown/risks.md`; OKRs KR 2.2 marked met.
+- New Fly.io deployment (`kagent-k3s` app, region `lhr`, `shared-cpu-4x`/8GB, 10GB volume for k3s state) is live and DeepSeek-verified independently of the minikube deployment. Both now exist: minikube (SPEC-016, free, always-on while the laptop is) and Fly.io (SPEC-018, costs while running, self-stops after 3h idle).
+- Case fully logged in Semblance per explicit user request: `error.log` (402 balance error), `fix.log` (credits added + re-verification), `lessons_learned.md` (retrospective + takeaways for future agents).
+- Documented two real infrastructure gotchas future re-runs will hit again if not read first: BusyBox's TLS-less `wget` in the `rancher/k3s` image, and Fly Machines' internal-only default DNS resolver breaking CoreDNS upstream forwarding.

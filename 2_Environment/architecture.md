@@ -121,7 +121,48 @@ graph TD
 - **Install:** `kagent install --profile demo` (kagent CLI + Helm chart `0.10.1`), deployed to the `kagent` namespace.
 - **Model backend:** DeepSeek via kagent's `OpenAI` provider type with `openAI.baseUrl` overridden to `https://api.deepseek.com` (see [`deepseek.md`](deepseek.md)). Key loaded from Azure Key Vault into a Helm-managed `Secret` (`kagent-openai`) — never written to a manifest or committed.
 - **Blocker found in this cluster:** a **Zarf** mutating admission webhook from earlier, unrelated experimentation (`zarf`/`hello-world` namespaces) intercepts image pulls in every namespace except `kube-system` by default. It broke every kagent pod (`ImagePullBackOff`) until the `kagent` namespace was added to that webhook's exclusion list (`kubectl patch mutatingwebhookconfigurations zarf ...`) — a minimal, reversible edit that leaves Zarf's behavior for `zarf`/`hello-world` untouched.
-- **Result:** all 10 demo-profile sample agents (`k8s-agent`, `helm-agent`, `istio-agent`, `cilium-debug-agent`, `cilium-manager-agent`, `cilium-policy-agent`, `kgateway-agent`, `observability-agent`, `promql-agent`, `argo-rollouts-conversion-agent`) are `Ready`/`Accepted`/`Running`. A live `message/send` call was confirmed reaching DeepSeek's API — see [R-010 in `risks.md`](../1_Real_Unknown/risks.md) for the one remaining blocker (DeepSeek account balance).
+- **Result:** all 10 demo-profile sample agents (`k8s-agent`, `helm-agent`, `istio-agent`, `cilium-debug-agent`, `cilium-manager-agent`, `cilium-policy-agent`, `kgateway-agent`, `observability-agent`, `promql-agent`, `argo-rollouts-conversion-agent`) are `Ready`/`Accepted`/`Running`. DeepSeek balance was topped up and both `k8s-agent` and `helm-agent` confirmed producing correct answers — see [R-S10 in `risks.md`](../1_Real_Unknown/risks.md).
+
+---
+
+## ☁️ kagent on Fly.io — k3s-in-a-Fly-Machine (SPEC-018)
+
+> A second, independent deployment of the same kagent + DeepSeek stack — this time on **Fly.io** rather than minikube, at explicit user request. Since kagent requires a real Kubernetes API and Fly.io is not Kubernetes, this runs single-node **k3s inside one Fly Machine** (Fly Machines are Firecracker micro-VMs, not shared-kernel containers, which is what makes nested containerd/k3s workable). Live at **https://kagent-k3s.fly.dev**.
+
+```mermaid
+graph TD
+    FlyMachine["Fly Machine (kagent-k3s app, region lhr, shared-cpu-4x/8GB)"]
+    K3s["k3s server (single-node, Traefik disabled)"]
+    Volume["10GB volume: kagent_k3s_data (k3s state)"]
+    PF1["kubectl port-forward :8080 → kagent-ui"]
+    PF2["kubectl port-forward :8083 → kagent-controller"]
+    Watchdog["idle-watchdog.sh — 3h idle → self-stop"]
+    Agents["10 sample agents (same set as minikube)"]
+    DeepSeek2["DeepSeek API"]
+    FlyProxy["Fly's edge proxy (fly.toml http_service)"]
+    User2["End user / kubectl"]
+
+    FlyMachine --> K3s
+    K3s --> Volume
+    K3s --> Agents
+    K3s --> PF1
+    K3s --> PF2
+    FlyProxy -->|:8080| PF1
+    User2 --> FlyProxy
+    Agents -->|chat completions| DeepSeek2
+    Watchdog -->|polls controller logs| K3s
+    Watchdog -->|POST .../stop via ephemeral curlimages/curl pod| FlyMachine
+
+    style Watchdog fill:#f59e0b,color:#000
+    style DeepSeek2 fill:#06b6d4,color:#fff
+```
+
+**Key facts (as delivered, 2026-09-10):**
+- **Image:** multi-stage build — Helm's static binary fetched in a throwaway `alpine:3.20` stage (real `curl`/TLS), copied into the `rancher/k3s` runtime base, which is minimal BusyBox with no package manager and a TLS-less `wget`.
+- **DNS fix required:** Fly Machines default `/etc/resolv.conf` to Fly's internal-only 6PN resolver, which k3s's CoreDNS inherits as its upstream — breaking every public DNS lookup (including DeepSeek's API) until `entrypoint.sh` overwrites it with public resolvers before `k3s server` starts.
+- **3-hour idle auto-stop:** `idle-watchdog.sh` checks `kagent-controller`'s own request log for recent `/api/a2a/` activity; with none for 3 hours, it stops the Machine via the Fly Machines API — called from a short-lived `curlimages/curl` pod, since the node image itself has no TLS-capable HTTP client.
+- **Secrets:** `DEEPSEEK_API_KEY` and `FLY_API_TOKEN` loaded from Azure Key Vault (`dp-kv-deliverypilot`) directly into `fly secrets`, never committed.
+- **Result:** live `message/send` call to `k8s-agent` on `https://kagent-k3s.fly.dev` returned a correct DeepSeek-generated answer. Full build-and-fix narrative in [`7_Testing_Known/deployment_timeline.md`](../7_Testing_Known/deployment_timeline.md).
 
 ---
 
