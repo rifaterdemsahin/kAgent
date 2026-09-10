@@ -235,6 +235,17 @@
 - **Related Files:** `5_Symbols/kagent-flyio/Dockerfile`, `5_Symbols/kagent-flyio/entrypoint.sh`, `5_Symbols/kagent-flyio/idle-watchdog.sh`, `5_Symbols/kagent-flyio/fly.toml`, `2_Environment/fly_io.md`, `2_Environment/architecture.md`, `7_Testing_Known/deployment_timeline.md`
 - **Last Updated:** 2026-09-10
 
+### SPEC-019: PoC Hosting Cost Options Page
+- **Status:** Active
+- **Description:** `5_Symbols/cost_options.html`, published in the Project Menu, comparing monthly cost for a minimal PoC cluster (~2 vCPU/4GB) across three hosting options: the project's current deployment (nested k3s on Fly.io, SPEC-018), a lightweight managed Kubernetes provider (Civo), and a hyperscaler (Google GKE Autopilot).
+- **Key Behaviors:**
+  - Cost table (control plane fee, worker compute, persistent storage, egress, estimated total) and takeaways provided directly by the user; reproduced as-delivered rather than independently re-derived.
+  - Estimated totals: Fly.io nested k3s ~$25.00/mo, Civo ~$21.73/mo, GKE Autopilot ~$100.00/mo — all illustrative, region/tier-dependent.
+  - Notes that this project's actual Fly.io deployment (SPEC-018) runs a 3-hour idle auto-stop, so real accrued cost is lower than the flat monthly figures assume.
+  - Registered in the Project Menu in all three nav sources; cross-linked from `agent_status.html` and `comparison_kagent_vs_azure_sre.html`.
+- **Related Files:** `5_Symbols/cost_options.html`, `navigation_config.json`, `index.html`, `5_Symbols/markdown_renderer.html`, `5_Symbols/agent_status.html`, `5_Symbols/comparison_kagent_vs_azure_sre.html`
+- **Last Updated:** 2026-09-10
+
 ---
 
 ## Spec Template

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PoC Hosting Cost Options</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --bg-card: rgba(22, 28, 45, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-primary: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-violet: #8b5cf6;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --font-display: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'Fira Code', monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      padding: 24px 16px 64px;
+    }
+    .wrap { max-width: 1000px; margin: 0 auto; }
+    a { color: var(--accent-cyan); }
+    h1 { font-family: var(--font-display); font-size: clamp(1.5rem, 4vw, 2.1rem); margin: 0 0 4px; }
+    .subtitle { color: var(--text-muted); margin: 0 0 24px; font-size: 0.95rem; }
+    .back-link { display: inline-block; margin-bottom: 20px; font-size: 0.85rem; text-decoration: none; }
+
+    h2.section { font-family: var(--font-display); font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin: 32px 0 16px; }
+
+    .cols {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+    .side {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .side h3 { margin: 0 0 4px; font-family: var(--font-display); font-size: 1.05rem; }
+    .side .tag { color: var(--text-muted); font-size: 0.76rem; margin-bottom: 12px; }
+    .side.current { border-top: 3px solid var(--accent-green); }
+    .side.civo { border-top: 3px solid var(--accent-cyan); }
+    .side.gke { border-top: 3px solid var(--accent-amber); }
+    .side .price { font-family: var(--font-mono); font-size: 1.5rem; margin: 4px 0 2px; }
+    .side.current .price { color: var(--accent-green); }
+    .side.civo .price { color: var(--accent-cyan); }
+    .side.gke .price { color: var(--accent-amber); }
+    .badge-current {
+      display: inline-block; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.03em;
+      background: rgba(16,185,129,0.15); color: var(--accent-green);
+      padding: 2px 8px; border-radius: 999px; margin-bottom: 8px;
+    }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+    th { color: var(--text-muted); font-weight: 500; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    td.mono, th.mono { font-family: var(--font-mono); font-size: 0.8rem; }
+    td.total { font-weight: 700; }
+    tr.total-row td { border-top: 2px solid var(--border-color); border-bottom: none; }
+
+    .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+    .card h3 { margin: 0 0 8px; font-family: var(--font-display); font-size: 1rem; }
+    .card p { margin: 4px 0; color: var(--text-muted); font-size: 0.87rem; line-height: 1.55; }
+    .card code { font-family: var(--font-mono); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; color: var(--accent-cyan); }
+    .cite { font-size: 0.72rem; color: var(--text-muted); }
+    footer { margin-top: 40px; color: var(--text-muted); font-size: 0.78rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back-link" href="agent_status.html"><i class="fa-solid fa-arrow-left"></i>&nbsp; Back to Agent Status</a>
+    <h1>PoC Hosting Cost Options</h1>
+    <p class="subtitle">For a Proof of Concept project, cost structure varies significantly depending on whether you run <strong>nested k3s inside Fly.io</strong> (what this project uses today), migrate to a <strong>lightweight managed K8s provider (Civo)</strong>, or opt for a <strong>managed hyperscale service (GKE)</strong>. Estimates below are for a minimal PoC cluster (~2 vCPU / 4GB RAM).</p>
+
+    <div class="cols">
+      <div class="side current">
+        <span class="badge-current">CURRENT</span>
+        <h3>Nested k3s on Fly.io</h3>
+        <div class="tag">SPEC-018 — kagent-k3s app, region lhr</div>
+        <div class="price">~$25.00/mo</div>
+      </div>
+      <div class="side civo">
+        <h3>Civo</h3>
+        <div class="tag">Lightweight managed Kubernetes</div>
+        <div class="price">~$21.73/mo</div>
+      </div>
+      <div class="side gke">
+        <h3>Google GKE Autopilot</h3>
+        <div class="tag">Hyperscaler, managed control plane</div>
+        <div class="price">~$100.00/mo</div>
+      </div>
+    </div>
+
+    <h2 class="section">Side-by-Side Monthly Cost Estimate</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cost Category</th>
+            <th>Option 1: Nested k3s on Fly.io (Current)</th>
+            <th>Option 2: Lightweight Managed K8s (e.g., Civo)</th>
+            <th>Option 3: Hyperscaler (e.g., Google GKE Autopilot)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Control Plane Fee</td>
+            <td class="mono">$0</td>
+            <td class="mono">$0</td>
+            <td class="mono">~$73.00/mo ($0.10/hr)</td>
+          </tr>
+          <tr>
+            <td>Worker Compute<br><span class="cite">(2 vCPU, 4GB RAM)</span></td>
+            <td class="mono">~$23.66/mo (<code>shared-cpu-4x</code>)</td>
+            <td class="mono">~$21.73/mo (Medium Node)</td>
+            <td class="mono">~$25.00/mo (Pod usage estimate)</td>
+          </tr>
+          <tr>
+            <td>Persistent Storage<br><span class="cite">(10GB NVMe)</span></td>
+            <td class="mono">~$1.50/mo ($0.15/GB)</td>
+            <td class="mono">Included (50GB default)</td>
+            <td class="mono">~$1.30/mo</td>
+          </tr>
+          <tr>
+            <td>Egress / Bandwidth</td>
+            <td class="mono">Free / ~$0.20 (&lt;10GB included)</td>
+            <td class="mono">Unlimited / Free</td>
+            <td class="mono">~$0.08–$0.12/GB</td>
+          </tr>
+          <tr class="total-row">
+            <td class="total">Estimated PoC Total</td>
+            <td class="mono total">~$25.00/mo</td>
+            <td class="mono total">~$21.73/mo</td>
+            <td class="mono total">~$100.00/mo</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="section">Key Takeaways for This PoC</h2>
+    <div class="card">
+      <h3>Fly.io Nested k3s — Cheapest Managed Experiment</h3>
+      <p>Gives full control of k3s at micro-VM pricing without control-plane overhead. In exchange, you pay in engineering effort to manage state, backups, and Firecracker cold starts — exactly the DNS-resolver and TLS-less-BusyBox issues this project's own <a href="markdown_renderer.html?file=7_Testing_Known/deployment_timeline.md">deployment timeline</a> hit and fixed.</p>
+    </div>
+    <div class="card">
+      <h3>Civo / Managed Light K8s — Best Developer-Experience PoC</h3>
+      <p>Costs roughly the same as Fly.io (~$22/mo) but gives native, multi-node Kubernetes out-of-the-box — no container-in-VM hacks, no control-plane fee, and no per-project DNS/TLS gotchas to debug.</p>
+    </div>
+    <div class="card">
+      <h3>GKE / EKS / AKS — Overkill for a PoC</h3>
+      <p>Hyperscalers charge a fixed ~$73/month control-plane fee regardless of cluster size, making a tiny single-node PoC disproportionately expensive compared to either alternative above.</p>
+    </div>
+
+    <p class="cite">Estimates only — actual pricing depends on region, provider tier, and current rate cards. This project's real Fly.io deployment (SPEC-018) also runs a 3-hour idle auto-stop so compute cost accrues only while actually in use, which the flat monthly figures above don't reflect.</p>
+
+    <footer>
+      <a href="agent_status.html">← Back to Agent Status</a> ·
+      <a href="comparison_kagent_vs_azure_sre.html">kagent vs Azure SRE Agent</a> ·
+      <a href="markdown_renderer.html?file=2_Environment/fly_io.md">Fly.io notes</a>
+    </footer>
+  </div>
+</body>
+</html>
