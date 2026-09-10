@@ -4,7 +4,9 @@
     ".kilo/skills/planning.md",
     ".kilo/skills/simulation.md",
     ".kilo/skills/deploy.md",
-    ".kilo/skills/secrets.md"
+    ".kilo/skills/secrets.md",
+    ".kilo/skills/mcp-builder.md",
+    ".kilo/skills/webapp-testing.md"
   ],
   "agents": {
     "kilocode": ".kilo/agent/kilocode.md",

@@ -18,6 +18,7 @@ Manage secrets securely through Azure Key Vault — never expose credentials in 
 | `AXIOM_TOKEN` | Azure Key Vault | Logging API token |
 | `AXIOM_DATASET` | Azure Key Vault | Log dataset name |
 | `FLY_API_TOKEN` | Azure Key Vault | Deployment token |
+| `DEEPSEEK_API_KEY` | Azure Key Vault (`/vaults/dp-kv-deliverypilot/secrets`) | Sample agent's model backend (OpenAI-compatible), loaded into the cluster as a Kubernetes Secret |
 
 ## Rules
 - Never store secrets in code, config files, or git history

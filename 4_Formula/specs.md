@@ -186,6 +186,17 @@
 - **Related Files:** `README.md`, `1_Real_Unknown/*`, `2_Environment/deepseek.md`, `4_Formula/decisions.md`, `4_Formula/llm_thinking_log.md`
 - **Last Updated:** 2026-09-10
 
+### SPEC-015: Vendored Skills from anthropics/skills
+- **Status:** Active
+- **Description:** Pulled `mcp-builder` and `webapp-testing` skills from the official [anthropics/skills](https://github.com/anthropics/skills) repo into `.claude/skills/`, with matching pointer files in `.kilo/skills/`.
+- **Key Behaviors:**
+  - `.claude/skills/mcp-builder/` and `.claude/skills/webapp-testing/` are full vendored copies (SKILL.md, reference/examples/scripts, LICENSE.txt) — use them as-is; do not fork/rewrite the upstream guides in place.
+  - `.kilo/skills/mcp-builder.md` and `.kilo/skills/webapp-testing.md` are short pointers (this project's Kilo-skill style) referencing the vendored Claude skills — not duplicates of the full guide.
+  - Registered in `2_Environment/superskills.md` (catalog table) and `.kilo/kilo.json` (skills array).
+  - `mcp-builder` applies when the kagent sample agent needs a custom tool/MCP server; `webapp-testing` applies when verifying a kagent UI/dashboard (via `kubectl port-forward`) in a real browser, complementing the static-only `smoke_test.py`.
+- **Related Files:** `.claude/skills/mcp-builder/`, `.claude/skills/webapp-testing/`, `.kilo/skills/mcp-builder.md`, `.kilo/skills/webapp-testing.md`, `2_Environment/superskills.md`, `.kilo/kilo.json`
+- **Last Updated:** 2026-09-10
+
 ---
 
 ## Spec Template

@@ -20,6 +20,8 @@ These skills are defined in `.kilo/skills/` and are essential for the delivery-p
 | **deploy** | `.kilo/skills/deploy.md` | Git commit-push-deploy workflow, smoke test gate | Committing, pushing, or deploying changes |
 | **secrets** | `.kilo/skills/secrets.md` | Azure Key Vault integration, secrets management | Handling credentials or environment variables |
 | **error-fix** | `.kilo/skills/error-fix.md` | Automated error scanning, GitHub Issue creation, fix application | Running smoke tests or fixing detected errors |
+| **mcp-builder** | `.kilo/skills/mcp-builder.md` | Building MCP servers for kagent/agent tool calls (vendored from [anthropics/skills](https://github.com/anthropics/skills)) | Designing a new tool/MCP server for the sample agent |
+| **webapp-testing** | `.kilo/skills/webapp-testing.md` | Browser-driven testing of a live web UI (vendored from [anthropics/skills](https://github.com/anthropics/skills)) | Verifying a kagent UI/dashboard or Pages site end-to-end in a browser |
 
 ## Required Superskills (Claude/System)
 

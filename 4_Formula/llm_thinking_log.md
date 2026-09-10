@@ -878,3 +878,22 @@ This log documents the thinking phase summaries and reasoning processes of the L
 - Stage 1 now reflects the real kAgent objective instead of template boilerplate.
 - DeepSeek API chosen as the sample agent's model backend; secret sourced from the existing Azure Key Vault, never committed.
 - Next: Environment Agent stage (minikube + kagent install docs), then a spec for the install + sample-agent run before touching `5_Symbols`.
+
+---
+
+## 📅 2026-09-10 — Pull skills from a popular GitHub skill repo
+
+### 📥 Input / Task
+- Pull needed skills from popular GitHub skill repos into `.claude/skills` and `.kilo/skills`.
+- Asked the user which source to use (the framework's own 4 Claude skills aren't Kubernetes-specific); user chose Anthropic's official `anthropics/skills` repo.
+
+### 💭 Thinking & Reasoning Process
+1. Listed `anthropics/skills`' `skills/` directory — none are Kubernetes/kagent-specific (it's a general-purpose catalog: docx, pptx, canvas-design, mcp-builder, webapp-testing, etc.). Picked the two most relevant to *this* project's actual work: **mcp-builder** (kagent's sample agent will likely need custom tool integrations, and MCP is the standard way to expose them) and **webapp-testing** (for verifying any kagent UI/dashboard reached via `kubectl port-forward`, complementing the existing static-only `smoke_test.py`).
+2. Vendored the full skill directories (SKILL.md + reference/scripts/examples + LICENSE.txt) via a sparse git checkout rather than just the top-level SKILL.md, so the reference material and helper scripts they point to actually exist in this repo.
+3. Added matching lightweight `.kilo/skills/*.md` pointer files in this project's existing flat Kilo-skill style (Purpose / Source / When It Applies Here / Rules), rather than duplicating the full Claude-format SKILL.md — Kilo skills in this repo are short pointers, not full guides.
+4. Registered both in `2_Environment/superskills.md` (catalog table) and `.kilo/kilo.json` (skills array) so they're discoverable the same way the framework's own skills are.
+
+### 📤 Outcomes & Decisions
+- `.claude/skills/mcp-builder/` and `.claude/skills/webapp-testing/` vendored in full from `anthropics/skills` (with their own LICENSE.txt preserved).
+- `.kilo/skills/mcp-builder.md` and `.kilo/skills/webapp-testing.md` added as pointers.
+- `secrets.md` skill updated to include `DEEPSEEK_API_KEY` in the secrets map.
