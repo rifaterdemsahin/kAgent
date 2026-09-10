@@ -175,6 +175,17 @@
 - **Related Files:** `5_Symbols/rules/agent_operating_rules.md`, `5_Symbols/rules/file_organization.md`, `agents.md`, `5_Symbols/toolbox/smoke_test.py`, `README.md`
 - **Last Updated:** 2026-09-10
 
+### SPEC-014: kAgent Project Init (kagent on minikube) + DeepSeek Model Backend
+- **Status:** Active
+- **Description:** This repo (`kAgent`) was initialized from `delivery-pilot-template` with the objective of installing kagent (a Kubernetes-native agent framework) on minikube and running a sample agent, sourced from public open-source libraries only. The sample agent's LLM backend is the DeepSeek API.
+- **Key Behaviors:**
+  - Template placeholders replaced (`README.md`, `index.html`, `sitemap.xml`, `robots.txt`) with kAgent's project identity; `agents.md`'s own explanation of the template origin is left untouched.
+  - `1_Real_Unknown` (`problem_statement.md`, `okrs.md`, `hypotheses.md`, `questions.md`, `kanban.md`, `tasks.md`, `risks.md`) reset to the kagent/minikube goal, replacing template-authoring history with this project's actual OKRs and risks.
+  - **DeepSeek as model backend:** DeepSeek's hosted API is OpenAI-compatible (`base_url` swap, no bespoke SDK) — see `2_Environment/deepseek.md`. The API key already exists in Azure Key Vault (`/vaults/dp-kv-deliverypilot/secrets`) and must be loaded into the cluster as a Kubernetes `Secret` at deploy time, never hardcoded in a manifest (RULE-003/004).
+  - Recorded as ADR-002 in `4_Formula/decisions.md`.
+- **Related Files:** `README.md`, `1_Real_Unknown/*`, `2_Environment/deepseek.md`, `4_Formula/decisions.md`, `4_Formula/llm_thinking_log.md`
+- **Last Updated:** 2026-09-10
+
 ---
 
 ## Spec Template

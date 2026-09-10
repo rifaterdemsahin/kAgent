@@ -8,91 +8,58 @@
 ## 📖 How to Use This Kanban
 
 1. **Move Tasks**: Move task items between sections (`Backlog 📥`, `Planned 📋`, `In Progress 🔄`, `In Review 👀`, `Done ✅`) as work progresses.
-2. **Assignee**: Designate who is working on the task (e.g., `Gemini`, `Claude`, `Copilot`, `Kilo Code`, or `Human`).
-3. **Traceability**: Link each task to its relevant stage documentation or source code (e.g., referencing a setup guide in `2_Environment` or a validation check in `7_Testing_Known`).
+2. **Assignee**: Designate who is working on the task (e.g., `Claude`, `Human`).
+3. **Traceability**: Link each task to its relevant stage documentation or source code.
 4. **Update Logs**: When an AI agent performs a task, they must update this kanban board in the same commit to ensure real-time status accuracy.
 
 ---
 
 ## 📥 Backlog
-*Tasks that are defined but not yet scheduled.*
 
-- [ ] **TSK-009: Production Environment Setup**
-  - **Assignee:** Human / DevOps
-  - **Details:** Setup production VMs/Containers on Fly.io and configure production TLS.
+- [ ] **TSK-104: Add a second sample agent**
+  - **Assignee:** Human / Claude
+  - **Details:** Once one sample agent runs cleanly, try a second kagent example to broaden coverage.
   - **Stage Reference:** N/A
-
-- [ ] **TSK-010: Advanced Multimodal Simulation Test**
-  - **Assignee:** Gemini
-  - **Details:** Validate UI layouts dynamically using Gemini multimodal vision checks.
-  - **Stage Reference:** [Simulation Stage](file:///Users/rifaterdemsahin/projects/delivery-pilot-template/3_Simulation/)
 
 ---
 
 ## 📋 Planned / To Do
-*Tasks scheduled for implementation.*
 
-- [ ] **TSK-005: Setup CI/CD Pipeline**
-  - **Assignee:** Copilot / DevOps
-  - **Details:** Set up GitHub Actions workflow to deploy static content to GitHub Pages.
-  - **Stage Reference:** [2_Environment/setup_ai.md](file:///Users/rifaterdemsahin/projects/delivery-pilot-template/2_Environment/setup_ai.md)
+- [ ] **TSK-101: Install minikube + start local cluster**
+  - **Assignee:** Human / Environment Agent
+  - **Details:** Install minikube and kubectl, start a cluster with sufficient resources for kagent.
+  - **Stage Reference:** [2_Environment/local_server.md](../2_Environment/local_server.md)
 
-- [ ] **TSK-006: Integrate Azure Key Vault**
-  - **Assignee:** Claude / Security
-  - **Details:** Connect runtime environments to Azure Key Vault for secure secrets storage.
-  - **Stage Reference:** [2_Environment/setup_azure.md](file:///Users/rifaterdemsahin/projects/delivery-pilot-template/2_Environment/setup_azure.md)
+- [ ] **TSK-102: Install kagent into the cluster**
+  - **Assignee:** Environment Agent
+  - **Details:** Install kagent via its documented Helm chart/CLI, verify CRDs and controller pods are healthy.
+  - **Stage Reference:** [2_Environment/architecture.md](../2_Environment/architecture.md)
 
-- [ ] **TSK-007: Implement Active Reflection Routine**
-  - **Assignee:** All Agents
-  - **Details:** Establish `6_Semblance/lessons_learned.md` for post-milestone retrospectives.
-  - **Stage Reference:** [6_Semblance Stage](file:///Users/rifaterdemsahin/projects/delivery-pilot-template/6_Semblance/)
+- [ ] **TSK-103: Deploy and run a kagent sample agent**
+  - **Assignee:** Symbols Agent
+  - **Details:** Apply a sample agent manifest, confirm it reaches Running/Ready, capture logs/output as evidence.
+  - **Stage Reference:** [7_Testing_Known/smoke_tests.md](../7_Testing_Known/smoke_tests.md)
 
 ---
 
 ## 🔄 In Progress
-*Active tasks currently being worked on.*
 
 *No active tasks in progress.*
 
 ---
 
 ## 👀 In Review
-*Tasks completed and awaiting validation/review.*
 
-- [ ] **TSK-008: Basic Stage Folders Structure Validation**
-  - **Assignee:** Claude / Gemini
-  - **Details:** Ensure folder mapping (1-7) exists and is populated with correct template files.
-  - **Stage Reference:** [7_Testing_Known/README.md](file:///Users/rifaterdemsahin/projects/delivery-pilot-template/7_Testing_Known/README.md)
+*No tasks awaiting review.*
 
 ---
 
 ## ✅ Done
-*Verified and completed tasks.*
 
-- [x] **TSK-001: Git Repository Initialization**
-  - **Assignee:** Human
-  - **Details:** Initialized repository and basic project structure.
-  - **Stage Reference:** [README.md](file:///Users/rifaterdemsahin/projects/delivery-pilot-template/README.md)
-
-- [x] **TSK-002: Project Home Page Layout**
-  - **Assignee:** Gemini
-  - **Details:** Created `index.html` and `navigation_config.json` for site entry point.
-  - **Stage Reference:** [index.html](file:///Users/rifaterdemsahin/projects/delivery-pilot-template/index.html)
-
-- [x] **TSK-003: Define Kanban Template**
-  - **Assignee:** Gemini
-  - **Details:** Created `1_Real_Unknown/kanban.md` and define the initial setup tasks.
-  - **Stage Reference:** [1_Real_Unknown/kanban.md](file:///Users/rifaterdemsahin/projects/delivery-pilot-template/1_Real_Unknown/kanban.md)
-
-- [x] **TSK-004: Configure Navigation & Menus**
-  - **Assignee:** Gemini / Claude
-  - **Details:** Add dynamic JSON configuration loading for navigation menus and ensure persistency via cookies.
-  - **Stage Reference:** [2_Environment/navigation.md](file:///Users/rifaterdemsahin/projects/delivery-pilot-template/2_Environment/navigation.md)
-
-- [x] **TSK-011: Supabase Database Integration & Setup**
-  - **Assignee:** Gemini
-  - **Details:** Initialize local Supabase CLI config, document database integration, and Azure Key Vault secret mappings.
-  - **Stage Reference:** [4_Formula/database.md](file:///Users/rifaterdemsahin/projects/delivery-pilot-template/4_Formula/database.md)
+- [x] **TSK-001: Bootstrap repo from delivery-pilot-template**
+  - **Assignee:** Claude
+  - **Details:** Copied the 7-stage framework, replaced placeholders with kAgent project identity.
+  - **Stage Reference:** [README.md](../README.md)
 
 ---
 
@@ -102,8 +69,7 @@
 - [ ] Update the environment folder > 1_Real_Unknown
 - [ ] Update the environment folder > 2_Environment
 - [ ] Add new features incoming as visuals folder > 3_Simulation
-- [ ] Add new ways of doing the implementation  to formula folder > 4_Formula
+- [ ] Add new ways of doing the implementation to formula folder > 4_Formula
 - [ ] Update the Symbols and pay technical debt > 5_Symbols
-- [ ] Add new errors in semblance  > 6_Semblance
+- [ ] Add new errors in semblance > 6_Semblance
 - [ ] Update the tests folder > 7_Testing_Known
-

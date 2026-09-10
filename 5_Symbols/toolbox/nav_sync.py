@@ -33,6 +33,7 @@ MENU = [
     ("   ├─ Fly.io (Deployments)", "2_Environment/fly_io.md"),
     ("   ├─ Supabase (Database)", "2_Environment/supabase.md"),
     ("   ├─ Axiom (Logs)", "2_Environment/axiom.md"),
+    ("   ├─ DeepSeek (Model Backend)", "2_Environment/deepseek.md"),
     ("   ├─ GitHub Agent", "2_Environment/github_agent.md"),
     ("   ├─ MCP Servers", "2_Environment/mcp.md"),
     ("   ├─ Superskills", "2_Environment/superskills.md"),
